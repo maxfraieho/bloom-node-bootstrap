@@ -74,16 +74,50 @@ bloom_detect_hooks() {
     HOOKS_COUNT="$hook_count"
     HOOKS_BLOOM_COUNT="$bloom_hooks"
 
+    # Detect canonical workflow hooks specifically
+    HOOKS_HAS_POLICY=false
+    HOOKS_HAS_SKILL_HOOK=false
+    HOOKS_HAS_DISPATCH=false
+    [[ -x "${hooks_dir}/ctx-workflow-policy.sh" ]]  && HOOKS_HAS_POLICY=true
+    [[ -x "${hooks_dir}/unified-skill-hook.sh" ]]   && HOOKS_HAS_SKILL_HOOK=true
+    [[ -x "${hooks_dir}/UserPromptSubmit" ]]         && HOOKS_HAS_DISPATCH=true
+
+    # Check settings.json registration
+    HOOKS_REGISTERED=false
+    local settings="${HOME}/.claude/settings.json"
+    if [[ -f "$settings" ]]; then
+        if python3 -c "
+import sys, json
+with open('${settings}') as f: d = json.load(f)
+hooks = d.get('hooks', {}).get('UserPromptSubmit', [])
+cmds = [h.get('command','') for e in hooks for h in e.get('hooks',[])]
+found = sum(1 for c in cmds if 'ctx-workflow-policy' in c or 'unified-skill-hook' in c)
+sys.exit(0 if found >= 2 else 1)
+" 2>/dev/null; then
+            HOOKS_REGISTERED=true
+        fi
+    fi
+
+    # Override status if canonical hooks are all present
+    if [[ "$HOOKS_HAS_POLICY" == "true" && "$HOOKS_HAS_SKILL_HOOK" == "true" && "$HOOKS_HAS_DISPATCH" == "true" ]]; then
+        HOOKS_OUR_VERSION=true
+        HOOKS_STATUS="ours-healthy"
+        HOOKS_HEALTHY=true
+    fi
+
     _hooks_export_and_print
 }
 
 _hooks_export_and_print() {
     export HOOKS_STATUS HOOKS_PATH HOOKS_COUNT HOOKS_BLOOM_COUNT HOOKS_OUR_VERSION HOOKS_HEALTHY
+    export HOOKS_HAS_POLICY HOOKS_HAS_SKILL_HOOK HOOKS_HAS_DISPATCH HOOKS_REGISTERED
 
-    log_debug "hooks/detect: STATUS=${HOOKS_STATUS} COUNT=${HOOKS_COUNT} OURS=${HOOKS_BLOOM_COUNT}"
-    printf 'HOOKS_STATUS=%s\nHOOKS_PATH=%s\nHOOKS_COUNT=%s\nHOOKS_BLOOM_COUNT=%s\nHOOKS_OUR_VERSION=%s\nHOOKS_HEALTHY=%s\n' \
+    log_debug "hooks/detect: STATUS=${HOOKS_STATUS} POLICY=${HOOKS_HAS_POLICY:-false} SKILL=${HOOKS_HAS_SKILL_HOOK:-false} DISPATCH=${HOOKS_HAS_DISPATCH:-false} REGISTERED=${HOOKS_REGISTERED:-false}"
+    printf 'HOOKS_STATUS=%s\nHOOKS_PATH=%s\nHOOKS_COUNT=%s\nHOOKS_BLOOM_COUNT=%s\nHOOKS_OUR_VERSION=%s\nHOOKS_HEALTHY=%s\nHOOKS_HAS_POLICY=%s\nHOOKS_HAS_SKILL_HOOK=%s\nHOOKS_HAS_DISPATCH=%s\nHOOKS_REGISTERED=%s\n' \
         "$HOOKS_STATUS" "${HOOKS_PATH:-}" "$HOOKS_COUNT" "$HOOKS_BLOOM_COUNT" \
-        "$HOOKS_OUR_VERSION" "$HOOKS_HEALTHY"
+        "$HOOKS_OUR_VERSION" "$HOOKS_HEALTHY" \
+        "${HOOKS_HAS_POLICY:-false}" "${HOOKS_HAS_SKILL_HOOK:-false}" \
+        "${HOOKS_HAS_DISPATCH:-false}" "${HOOKS_REGISTERED:-false}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

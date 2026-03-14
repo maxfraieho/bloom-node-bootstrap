@@ -16,8 +16,8 @@ if ! declare -f state_set &>/dev/null; then
 fi
 source "${_WF_INSTALL_DIR}/detect.sh"
 
-WORKFLOW_REPO_URL="${WORKFLOW_REPO_URL:-https://github.com/vokov/claude-codex-workflow}"
-WORKFLOW_INSTALL_PATH="${WORKFLOW_INSTALL_PATH:-${HOME}/.claude/workflow}"
+WORKFLOW_REPO_URL="${WORKFLOW_REPO_URL:-https://github.com/maxfraieho/claude-codex-workflow}"
+WORKFLOW_INSTALL_PATH="${WORKFLOW_INSTALL_PATH:-${HOME}/.bloom/sources/claude-codex-workflow}"
 MODE="${MODE:-install}"
 
 _wf_clone_or_update() {
@@ -45,10 +45,20 @@ _wf_run_post_install() {
         log_info "workflow: running post-install.sh"
         run_cmd bash "${dir}/post-install.sh"
     fi
-    # If workflow has a CLAUDE.md, mention it
-    if [[ -f "${dir}/CLAUDE.md" ]]; then
-        log_info "workflow: CLAUDE.md found at ${dir}/CLAUDE.md"
-        log_info "workflow: consider symlinking or including this in your project CLAUDE.md"
+
+    # Install bin/ctx to ~/.local/bin/ctx
+    if [[ -f "${dir}/bin/ctx" ]]; then
+        ensure_dir "${HOME}/.local/bin"
+        run_cmd cp "${dir}/bin/ctx" "${HOME}/.local/bin/ctx"
+        run_cmd chmod +x "${HOME}/.local/bin/ctx"
+        log_ok "workflow: installed ctx → ${HOME}/.local/bin/ctx"
+    fi
+
+    # Install skill.md to ~/.claude/skills/claude-codex-workflow.md
+    if [[ -f "${dir}/skill.md" ]]; then
+        ensure_dir "${HOME}/.claude/skills"
+        run_cmd cp "${dir}/skill.md" "${HOME}/.claude/skills/claude-codex-workflow.md"
+        log_ok "workflow: installed skill → ${HOME}/.claude/skills/claude-codex-workflow.md"
     fi
 }
 

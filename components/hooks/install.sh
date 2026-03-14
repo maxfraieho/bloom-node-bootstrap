@@ -30,7 +30,8 @@ MODE="${MODE:-install}"
 _hooks_find_source_dir() {
     # 1. Workflow repo (preferred — canonical hooks live there)
     local workflow_hooks=""
-    for wf_loc in "${HOME}/.claude/workflow/hooks" \
+    for wf_loc in "${HOME}/.bloom/sources/claude-codex-workflow/hooks" \
+                   "${HOME}/.claude/workflow/hooks" \
                    "${HOME}/claude-codex-workflow/hooks" \
                    "${HOME}/.claude/workflow-bloom/hooks"; do
         if [[ -d "$wf_loc" ]]; then
@@ -87,10 +88,76 @@ _hooks_install_from_source() {
         run_cmd cp "$hook_file" "$dst_file"
         run_cmd chmod +x "$dst_file"
         installed=$((installed + 1))
-    done < <(find "$src" -maxdepth 1 -type f \( -name "*.sh" -o -name "*.py" -o -name "*.json" \) 2>/dev/null)
+    # Include executables without extension (e.g. UserPromptSubmit)
+    done < <(find "$src" -maxdepth 1 -type f \( -name "*.sh" -o -name "*.py" -o -name "*.json" -o \( ! -name "*.*" ! -name "README*" \) \) 2>/dev/null)
 
     log_ok "hooks: installed ${installed} hook(s) from ${src}"
     echo "$installed"
+}
+
+# ---------------------------------------------------------------------------
+# _hooks_patch_settings
+# Ensure ctx-workflow-policy.sh and unified-skill-hook.sh are registered
+# in ~/.claude/settings.json under hooks.UserPromptSubmit.
+# Preserves existing entries (machine-local hooks like claude-mem-minio).
+# ---------------------------------------------------------------------------
+_hooks_patch_settings() {
+    local settings_file="${HOME}/.claude/settings.json"
+    local hooks_dir="${HOME}/.claude/hooks"
+    local policy_hook="${hooks_dir}/ctx-workflow-policy.sh"
+    local skill_hook="${hooks_dir}/unified-skill-hook.sh"
+
+    if [[ ! -f "$settings_file" ]]; then
+        log_warn "hooks: settings.json not found at ${settings_file} — creating minimal"
+        ensure_dir "${HOME}/.claude"
+        cat > "$settings_file" <<SETTINGS
+{
+  "hooks": {
+    "UserPromptSubmit": []
+  }
+}
+SETTINGS
+    fi
+
+    # Backup before patching
+    run_cmd cp "$settings_file" "${settings_file}.bloom.bak"
+
+    # Use python3 to safely patch the JSON
+    python3 - "$settings_file" "$policy_hook" "$skill_hook" <<'PYEOF'
+import sys, json, os
+
+settings_path, policy_hook, skill_hook = sys.argv[1], sys.argv[2], sys.argv[3]
+
+with open(settings_path) as f:
+    data = json.load(f)
+
+data.setdefault("hooks", {})
+data["hooks"].setdefault("UserPromptSubmit", [])
+
+# Collect existing hook commands
+existing_cmds = set()
+for entry in data["hooks"]["UserPromptSubmit"]:
+    for h in entry.get("hooks", []):
+        existing_cmds.add(h.get("command", ""))
+
+# Add missing hooks
+for hook_cmd in [skill_hook, policy_hook]:
+    if hook_cmd not in existing_cmds:
+        data["hooks"]["UserPromptSubmit"].append({
+            "hooks": [{"type": "command", "command": hook_cmd}]
+        })
+        print(f"  registered: {hook_cmd}", file=sys.stderr)
+    else:
+        print(f"  already registered: {hook_cmd}", file=sys.stderr)
+
+with open(settings_path, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+
+print("settings.json patched OK", file=sys.stderr)
+PYEOF
+
+    log_ok "hooks: settings.json patched — hooks registered"
 }
 
 # ---------------------------------------------------------------------------
@@ -193,6 +260,9 @@ _mode_install() {
     count=$(find "$HOOKS_TARGET_DIR" -maxdepth 1 -type f 2>/dev/null | wc -l)
     state_set_component_installed "hooks" "$count" "install"
     state_set "component.hooks.path" "$HOOKS_TARGET_DIR"
+
+    # Register hooks in ~/.claude/settings.json
+    _hooks_patch_settings
 }
 
 _mode_reuse() {

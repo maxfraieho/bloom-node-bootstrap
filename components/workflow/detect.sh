@@ -20,8 +20,9 @@ bloom_detect_workflow() {
     local wf_version=""
     local wf_our_version=false
 
-    # Known install locations
+    # Known install locations (canonical path first)
     local search_dirs=(
+        "${HOME}/.bloom/sources/claude-codex-workflow"
         "${HOME}/.claude/workflow"
         "${HOME}/claude-codex-workflow"
         "${HOME}/.local/share/bloom/workflow"
@@ -93,15 +94,29 @@ bloom_detect_workflow() {
     WORKFLOW_VERSION="$wf_version"
     WORKFLOW_OUR_VERSION="$wf_our_version"
 
+    # Detect ctx availability
+    WORKFLOW_HAS_CTX=false
+    WORKFLOW_CTX_PATH=""
+    if command -v ctx &>/dev/null; then
+        WORKFLOW_HAS_CTX=true
+        WORKFLOW_CTX_PATH="$(command -v ctx)"
+    fi
+
+    # Detect skill installation
+    WORKFLOW_HAS_SKILL=false
+    [[ -f "${HOME}/.claude/skills/claude-codex-workflow.md" ]] && WORKFLOW_HAS_SKILL=true
+
     _wf_export_and_print
 }
 
 _wf_export_and_print() {
     export WORKFLOW_STATUS WORKFLOW_PATH WORKFLOW_VERSION WORKFLOW_OUR_VERSION WORKFLOW_HEALTHY
+    export WORKFLOW_HAS_CTX WORKFLOW_CTX_PATH WORKFLOW_HAS_SKILL
 
-    log_debug "workflow/detect: STATUS=${WORKFLOW_STATUS} PATH=${WORKFLOW_PATH}"
-    printf 'WORKFLOW_STATUS=%s\nWORKFLOW_PATH=%s\nWORKFLOW_VERSION=%s\nWORKFLOW_OUR_VERSION=%s\nWORKFLOW_HEALTHY=%s\n' \
-        "$WORKFLOW_STATUS" "$WORKFLOW_PATH" "$WORKFLOW_VERSION" "$WORKFLOW_OUR_VERSION" "$WORKFLOW_HEALTHY"
+    log_debug "workflow/detect: STATUS=${WORKFLOW_STATUS} PATH=${WORKFLOW_PATH} CTX=${WORKFLOW_HAS_CTX:-false} SKILL=${WORKFLOW_HAS_SKILL:-false}"
+    printf 'WORKFLOW_STATUS=%s\nWORKFLOW_PATH=%s\nWORKFLOW_VERSION=%s\nWORKFLOW_OUR_VERSION=%s\nWORKFLOW_HEALTHY=%s\nWORKFLOW_HAS_CTX=%s\nWORKFLOW_CTX_PATH=%s\nWORKFLOW_HAS_SKILL=%s\n' \
+        "$WORKFLOW_STATUS" "${WORKFLOW_PATH:-}" "$WORKFLOW_VERSION" "$WORKFLOW_OUR_VERSION" \
+        "$WORKFLOW_HEALTHY" "${WORKFLOW_HAS_CTX:-false}" "${WORKFLOW_CTX_PATH:-}" "${WORKFLOW_HAS_SKILL:-false}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
