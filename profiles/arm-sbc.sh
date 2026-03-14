@@ -45,6 +45,9 @@ PROFILE_PRESERVE_GPIO_CONFIG=true
 
 PROFILE_NOTES="ARM SBC detected (non-Raspberry Pi). Using Armbian-compatible defaults. zram is recommended over SD card swap. If running from SD card, enable log2ram or similar to reduce write cycles. Check vendor kernel for any quirks."
 
+# ctx context profile: rpi boosts debugging/bootstrap/recovery skills (1.3-1.5x)
+PROFILE_CTX_PROFILE="rpi"
+
 export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_MIN_FREE_RAM_MB PROFILE_COMPONENTS \
        PROFILE_DEFAULT_MODE_CGC PROFILE_DEFAULT_MODE_CHUB \
@@ -54,4 +57,4 @@ export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_PYTHON_MIN PROFILE_PYTHON_PREFERRED \
        PROFILE_PKG_MANAGERS PROFILE_GIT_CLONE_DEPTH PROFILE_INSTALL_DEV_DEPS \
        PROFILE_MINIMIZE_WRITES PROFILE_PRESERVE_GPIO_CONFIG \
-       PROFILE_NOTES
+       PROFILE_CTX_PROFILE PROFILE_NOTES

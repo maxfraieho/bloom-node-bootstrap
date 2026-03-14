@@ -47,6 +47,9 @@ PROFILE_USE_TMPFS_WORK=true
 
 PROFILE_NOTES="Cloud micro instance detected (<1GB RAM). Network is fast; shallow clones enabled. System-tuning skipped — cloud hypervisor manages resources. If you need more RAM, consider upgrading to the next instance tier before installing heavy components."
 
+# ctx context profile: default (cloud instances use general-purpose workflow)
+PROFILE_CTX_PROFILE="default"
+
 export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_MIN_FREE_RAM_MB PROFILE_COMPONENTS \
        PROFILE_DEFAULT_MODE_CGC PROFILE_DEFAULT_MODE_CHUB \
@@ -55,4 +58,4 @@ export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_ZRAM_RECOMMEND PROFILE_PYTHON_MIN PROFILE_PYTHON_PREFERRED \
        PROFILE_PKG_MANAGERS PROFILE_GIT_CLONE_DEPTH PROFILE_INSTALL_DEV_DEPS \
        PROFILE_INIT_SYSTEM PROFILE_USE_TMPFS_WORK \
-       PROFILE_NOTES
+       PROFILE_CTX_PROFILE PROFILE_NOTES

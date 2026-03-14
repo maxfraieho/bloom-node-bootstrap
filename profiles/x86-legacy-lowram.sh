@@ -44,6 +44,9 @@ PROFILE_WARN_IF_32BIT=true
 
 PROFILE_NOTES="Old x86 machine detected with <2GB RAM. Shallow git clones are enabled. If running on a spinning HDD, expect slow clone times. Consider adding a swapfile if none exists: 'sudo fallocate -l 1G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile'."
 
+# ctx context profile: rpi boosts debugging/bootstrap/recovery skills for constrained hardware
+PROFILE_CTX_PROFILE="rpi"
+
 export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_MIN_FREE_RAM_MB PROFILE_COMPONENTS \
        PROFILE_DEFAULT_MODE_CGC PROFILE_DEFAULT_MODE_CHUB \
@@ -52,4 +55,4 @@ export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_ZRAM_RECOMMEND PROFILE_ZRAM_SIZE_MB \
        PROFILE_PYTHON_MIN PROFILE_PYTHON_PREFERRED \
        PROFILE_PKG_MANAGERS PROFILE_GIT_CLONE_DEPTH PROFILE_INSTALL_DEV_DEPS \
-       PROFILE_WARN_IF_32BIT PROFILE_NOTES
+       PROFILE_WARN_IF_32BIT PROFILE_CTX_PROFILE PROFILE_NOTES

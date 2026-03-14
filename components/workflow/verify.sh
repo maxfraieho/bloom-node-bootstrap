@@ -20,8 +20,11 @@ bloom_verify_workflow() {
 
     # 1. Find workflow directory
     local wf_dir=""
-    for loc in "${HOME}/.claude/workflow" "${HOME}/claude-codex-workflow" \
-                "${HOME}/.local/share/bloom/workflow"; do
+    for loc in "${HOME}/.bloom/sources/claude-codex-workflow" \
+               "${HOME}/.claude/workflow" \
+               "${HOME}/claude-codex-workflow" \
+               "${HOME}/.local/share/bloom/workflow" \
+               "${HOME}/.claude/workflow-bloom"; do
         if [[ -d "$loc" ]]; then
             wf_dir="$loc"
             break
@@ -65,6 +68,56 @@ bloom_verify_workflow() {
     if [[ -f "${wf_dir}/CLAUDE.md" ]]; then
         # Just informational — not a failure
         log_info "workflow: CLAUDE.md present — ensure it is sourced in your project CLAUDE.md"
+    fi
+
+    # 5. Check skills/manifest.json (ctx routing)
+    local manifest_found=false
+    if [[ -f "${wf_dir}/skills/manifest.json" ]]; then
+        manifest_found=true
+        log_ok "workflow: skills/manifest.json found"
+    fi
+    if [[ "$manifest_found" == "false" ]]; then
+        issues+=("skills/manifest.json not found — ctx profile-aware routing will fall back to embedded list")
+        [[ $exit_code -lt 1 ]] && exit_code=1
+    fi
+
+    # 6. Check ctx binary is installed and functional
+    local ctx_bin=""
+    if command -v ctx &>/dev/null; then
+        ctx_bin="$(command -v ctx)"
+    elif [[ -f "${HOME}/.local/bin/ctx" ]]; then
+        ctx_bin="${HOME}/.local/bin/ctx"
+    fi
+
+    if [[ -n "$ctx_bin" ]]; then
+        # Verify ctx doctor exits without error
+        if python3 "$ctx_bin" doctor &>/dev/null 2>&1; then
+            log_ok "workflow: ctx installed and healthy (${ctx_bin})"
+        else
+            # ctx doctor may exit 1 for PARTIAL (chub/cgc missing) — check for BROKEN
+            local doctor_out
+            doctor_out=$(python3 "$ctx_bin" doctor 2>&1 || true)
+            if echo "$doctor_out" | grep -q "BROKEN"; then
+                issues+=("ctx doctor reports BROKEN environment")
+                [[ $exit_code -lt 1 ]] && exit_code=1
+            else
+                log_ok "workflow: ctx installed at ${ctx_bin} (partial env, non-fatal)"
+            fi
+        fi
+    else
+        issues+=("ctx not found — run workflow install to deploy bin/ctx to ~/.local/bin/ctx")
+        issues+=("  and ensure ~/.local/bin is in PATH")
+        [[ $exit_code -lt 1 ]] && exit_code=1
+    fi
+
+    # 7. Check CTX_PROFILE env file
+    local bloom_env="${HOME}/.bloom/env.sh"
+    if [[ -f "$bloom_env" ]] && grep -q "CTX_PROFILE" "$bloom_env" 2>/dev/null; then
+        local ctx_profile
+        ctx_profile="$(grep "^export CTX_PROFILE=" "$bloom_env" | cut -d= -f2 | tr -d '"'"'" 2>/dev/null || echo "unknown")"
+        log_ok "workflow: CTX_PROFILE=${ctx_profile} set in ${bloom_env}"
+    else
+        log_info "workflow: CTX_PROFILE not set in ~/.bloom/env.sh — will use 'default' profile"
     fi
 
     for issue in "${issues[@]}"; do

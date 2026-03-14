@@ -49,6 +49,9 @@ PROFILE_REQUIRE_BASH_INSTALL=true
 
 PROFILE_NOTES="Alpine Linux detected. Bash may need to be installed first: 'apk add bash git python3'. Some Python packages with C extensions may require build tools: 'apk add build-base python3-dev'. musl libc compatibility checked per component."
 
+# ctx context profile: default (Alpine containers use general-purpose workflow)
+PROFILE_CTX_PROFILE="default"
+
 export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_MIN_FREE_RAM_MB PROFILE_COMPONENTS \
        PROFILE_DEFAULT_MODE_CGC PROFILE_DEFAULT_MODE_CHUB \
@@ -57,4 +60,4 @@ export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_ZRAM_RECOMMEND PROFILE_PYTHON_MIN PROFILE_PYTHON_PREFERRED \
        PROFILE_PKG_MANAGERS PROFILE_GIT_CLONE_DEPTH PROFILE_INSTALL_DEV_DEPS \
        PROFILE_MUSL_COMPAT PROFILE_INIT_SYSTEM PROFILE_REQUIRE_BASH_INSTALL \
-       PROFILE_NOTES
+       PROFILE_CTX_PROFILE PROFILE_NOTES

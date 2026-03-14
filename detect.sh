@@ -241,8 +241,9 @@ _detect_hooks() {
 # Detect workflow installation
 _detect_workflow() {
     local wf_path=""
-    for loc in "${HOME}/.claude/workflow" "${HOME}/claude-codex-workflow" \
-                "${HOME}/.local/share/bloom/workflow"; do
+    for loc in "${HOME}/.bloom/sources/claude-codex-workflow" \
+               "${HOME}/.claude/workflow" "${HOME}/claude-codex-workflow" \
+               "${HOME}/.local/share/bloom/workflow"; do
         if [[ -d "$loc" ]]; then
             wf_path="$loc"
             break

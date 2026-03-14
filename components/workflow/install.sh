@@ -20,6 +20,54 @@ WORKFLOW_REPO_URL="${WORKFLOW_REPO_URL:-https://github.com/maxfraieho/claude-cod
 WORKFLOW_INSTALL_PATH="${WORKFLOW_INSTALL_PATH:-${HOME}/.bloom/sources/claude-codex-workflow}"
 MODE="${MODE:-install}"
 
+# ---------------------------------------------------------------------------
+# _wf_resolve_ctx_profile
+# Map bloom machine profile → ctx context profile.
+# rpi/arm/legacy-lowram = constrained hardware → "rpi" profile (debug boosts)
+# everything else → "default"
+# ---------------------------------------------------------------------------
+_wf_resolve_ctx_profile() {
+    # Prefer explicit PROFILE_CTX_PROFILE from profile file if set
+    if [[ -n "${PROFILE_CTX_PROFILE:-}" ]]; then
+        echo "$PROFILE_CTX_PROFILE"
+        return
+    fi
+    # Fallback: infer from PROFILE_NAME
+    case "${PROFILE_NAME:-generic-safe}" in
+        rpi-lowram|arm-sbc|x86-legacy-lowram) echo "rpi" ;;
+        *) echo "default" ;;
+    esac
+}
+
+# ---------------------------------------------------------------------------
+# _wf_write_ctx_env
+# Write CTX_PROFILE to ~/.bloom/env.sh so shells and hooks pick it up.
+# Idempotent: updates existing entry if present.
+# ---------------------------------------------------------------------------
+_wf_write_ctx_env() {
+    local bloom_env="${HOME}/.bloom/env.sh"
+    local ctx_profile
+    ctx_profile="$(_wf_resolve_ctx_profile)"
+
+    ensure_dir "${HOME}/.bloom"
+
+    if [[ -f "$bloom_env" ]] && grep -q "^export CTX_PROFILE=" "$bloom_env" 2>/dev/null; then
+        # Update existing entry
+        sed -i "s|^export CTX_PROFILE=.*|export CTX_PROFILE=${ctx_profile}|" "$bloom_env"
+        log_ok "workflow: updated CTX_PROFILE=${ctx_profile} in ${bloom_env}"
+    else
+        # Append new entry
+        echo "export CTX_PROFILE=${ctx_profile}" >> "$bloom_env"
+        log_ok "workflow: set CTX_PROFILE=${ctx_profile} in ${bloom_env}"
+    fi
+
+    # Remind user to source the env file if not already in .bashrc
+    if [[ -f "${HOME}/.bashrc" ]] && ! grep -q "bloom/env.sh" "${HOME}/.bashrc" 2>/dev/null; then
+        log_info "workflow: add the following to ~/.bashrc to persist CTX_PROFILE:"
+        log_info "  source ~/.bloom/env.sh"
+    fi
+}
+
 _wf_clone_or_update() {
     local dest="$1"
     local depth="${PROFILE_GIT_CLONE_DEPTH:-0}"
@@ -60,6 +108,9 @@ _wf_run_post_install() {
         run_cmd cp "${dir}/skill.md" "${HOME}/.claude/skills/claude-codex-workflow.md"
         log_ok "workflow: installed skill → ${HOME}/.claude/skills/claude-codex-workflow.md"
     fi
+
+    # Write CTX_PROFILE env based on machine profile
+    _wf_write_ctx_env
 }
 
 _mode_install() {

@@ -48,6 +48,9 @@ PROFILE_REDUCE_GPU_MEM=true         # gpu_mem=16 in /boot/config.txt if headless
 
 PROFILE_NOTES="Enable zram before installing on Pi with 512MB RAM. Use 'raspi-config' to set GPU memory to 16MB if running headless. Avoid npm build steps — prefer pre-built binaries. Run one component at a time."
 
+# ctx context profile: rpi boosts debugging/bootstrap/recovery skills (1.3-1.5x)
+PROFILE_CTX_PROFILE="rpi"
+
 export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_MIN_FREE_RAM_MB PROFILE_COMPONENTS \
        PROFILE_DEFAULT_MODE_CGC PROFILE_DEFAULT_MODE_CHUB \
@@ -57,4 +60,4 @@ export PROFILE_NAME PROFILE_DESC PROFILE_MAX_PARALLEL PROFILE_SKIP_SWAP_CHECK \
        PROFILE_PYTHON_MIN PROFILE_PYTHON_PREFERRED \
        PROFILE_PKG_MANAGERS PROFILE_GIT_CLONE_DEPTH PROFILE_INSTALL_DEV_DEPS \
        PROFILE_DISABLE_MANDB PROFILE_DISABLE_TRIGGERHAPPY PROFILE_REDUCE_GPU_MEM \
-       PROFILE_NOTES
+       PROFILE_CTX_PROFILE PROFILE_NOTES
