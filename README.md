@@ -2,7 +2,7 @@
 
 A component-based adaptive installer for deploying a lightweight dev stack on heterogeneous low-resource Linux nodes: Raspberry Pi, old x86 laptops, Alpine micro nodes, and ARM SBCs.
 
-Installs and manages: **cgc**, **chub**, **workflow**, **hooks**.
+Installs and manages: **cgc**, **chub**, **workflow**, **hooks**, **system-tuning**, **tokens-config**.
 
 ## Design Principles
 

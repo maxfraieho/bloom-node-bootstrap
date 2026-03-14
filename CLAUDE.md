@@ -24,11 +24,14 @@ bash doctor.sh                                   # full health check
 Profiles live in `profiles/`. Each profile is a shell fragment that sets component
 selection and tuning variables.
 
-| Profile | Machine |
-|---------|---------|
-| `x86-legacy-lowram` | Acer Aspire (x86, low RAM) |
-| `rpi-lowram` | Raspberry Pi (ARM, low RAM) |
-| `generic-safe` | Fallback for unknown hardware |
+| Profile | PROFILE_CTX_PROFILE | Targets |
+|---------|--------------------|---------|
+| `rpi-lowram` | `rpi` | Raspberry Pi, low-RAM nodes |
+| `arm-sbc` | `rpi` | ARM SBCs (Orange Pi, Banana Pi) |
+| `x86-legacy-lowram` | `rpi` | x86 nodes with low RAM |
+| `cloud-micro` | `default` | Cloud micro VMs |
+| `x86-alpine-minimal` | `default` | Minimal Alpine x86 |
+| `generic-safe` | `default` | Default fallback profile |
 
 `detect.sh` reads hardware and writes the detected profile to `state/profile`.
 
@@ -45,7 +48,7 @@ components/COMPONENT/
   verify.sh    # confirm component is healthy post-install
 ```
 
-Components: `cgc`, `chub`, `workflow`, `hooks`.
+Components: `cgc`, `chub`, `workflow`, `hooks`, `system-tuning`, `tokens-config`.
 
 ---
 
