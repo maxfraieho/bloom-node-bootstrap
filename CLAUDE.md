@@ -4,6 +4,33 @@ Adaptive installer for low-resource Linux nodes. Installs cgc + chub + workflow 
 via a profile-aware component system. Designed for machines with constrained RAM/storage
 (Acer Aspire x86-legacy, Raspberry Pi, generic fallback).
 
+## MANDATORY: Codex Gate (fill BEFORE any implementation)
+
+Before touching any file, fill this gate:
+
+```
+Triggers fired: [T1/T2/T3/T4/T5 — or NONE]
+  T1: Batch of identical/templated changes (N≥3 files)
+  T2: Creating N≥2 new files in a new directory
+  T3: N≥2 isolated components modified in same task
+  T4: Any subtask with no shared state with concurrent work
+  T5: File-editing phase before a test/integration loop
+
+Codex-eligible: [list subtasks — or NONE]
+Codex-dispatched: [list subtasks — or PENDING]
+Local-only: [list subtasks with reason — or NONE]
+Claimed exemptions: [bottleneck per exemption — or NONE]
+Gate status: PASS / BLOCK
+```
+
+**BLOCK = stop, delegate to Codex before writing any file.**
+
+Codex invocation:
+```bash
+# Write task to /tmp/task.md first (avoids SIGSEGV on Unicode in shell args)
+codex exec --dangerously-bypass-approvals-and-sandbox "$(cat /tmp/task.md)"
+```
+
 ---
 
 ## Key Commands
@@ -68,9 +95,3 @@ This exports `CTX_PROFILE` and makes `ctx skills` and `ctx context` available
 for AI-assisted workflow integration.
 
 ---
-
-## Engineering Tasks — Codex Gate
-
-Before starting any task that modifies ≥2 components or ≥3 files with identical changes,
-fill the gate template and dispatch Codex for eligible subtasks.
-See: ~/.claude/skills/codex-usage-policy.md
