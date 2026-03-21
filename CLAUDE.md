@@ -4,6 +4,24 @@ Adaptive installer for low-resource Linux nodes. Installs cgc + chub + workflow 
 via a profile-aware component system. Designed for machines with constrained RAM/storage
 (Acer Aspire x86-legacy, Raspberry Pi, generic fallback).
 
+## MANDATORY: Context Before Implementation
+
+Before filling the Codex Gate, gather context:
+
+```bash
+# Code context (symbols, functions, patterns in repo)
+cgc search "<relevant symbol or pattern>" --repo .
+
+# Docs context (API docs, library guides)
+chub search "<technology or library name>"
+
+# Combined workflow context
+ctx feature "<task description>" --repo .
+```
+
+Include cgc/chub output summary in your Codex prompt.
+Codex prompts WITHOUT context are lower quality — always attach.
+
 ## MANDATORY: Codex Gate (fill BEFORE any implementation)
 
 Before touching any file, fill this gate:

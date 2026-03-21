@@ -22,6 +22,36 @@ Triggers (any one = delegate):
 - T4: Any subtask with no shared state with concurrent work
 - T5: File-editing phase that precedes a test/integration loop
 
+## Context enrichment (REQUIRED before writing Codex prompt)
+
+Every Codex prompt MUST include relevant context from:
+
+```bash
+# 1. Code context — what exists in the repo
+cgc search "<symbol or pattern>" --repo /path/to/repo
+
+# 2. Docs context — how libraries/APIs work
+chub search "<library name or concept>"
+
+# 3. Workflow context
+ctx feature "<task>" --repo /path/to/repo
+```
+
+Paste the output into your Codex prompt under a `## Context` section.
+Example prompt structure:
+
+```text
+## Context
+[cgc output]
+[chub output]
+
+## Task
+[what to implement]
+
+## Files
+[exact paths]
+```
+
 ## Gate (fill before starting any task)
 
 ```
